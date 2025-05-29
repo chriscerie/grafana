@@ -207,10 +207,6 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 
 	genericError := errors.New("test-error")
 	datasourceError := expr.MakeQueryError("A", "datasource_uid_1", errors.New("this is an error"))
-	expectedDatasourceErrorLabels := data.Labels{
-		"datasource_uid": "datasource_uid_1",
-		"ref_id":         "A",
-	}
 
 	labels1 := data.Labels{
 		"instance_label": "test-1",
@@ -249,21 +245,19 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 	)
 
 	labels := map[string]data.Labels{
-		"system + rule":                    mergeLabels(baseRule.Labels, systemLabels),
-		"system + rule + labels1":          mergeLabels(mergeLabels(labels1, baseRule.Labels), systemLabels),
-		"system + rule + labels2":          mergeLabels(mergeLabels(labels2, baseRule.Labels), systemLabels),
-		"system + rule + labels3":          mergeLabels(mergeLabels(labels3, baseRule.Labels), systemLabels),
-		"system + rule + no-data":          mergeLabels(mergeLabels(noDataLabels, baseRule.Labels), systemLabels),
-		"system + rule + datasource-error": mergeLabels(mergeLabels(expectedDatasourceErrorLabels, baseRule.Labels), systemLabels),
+		"system + rule":           mergeLabels(baseRule.Labels, systemLabels),
+		"system + rule + labels1": mergeLabels(mergeLabels(labels1, baseRule.Labels), systemLabels),
+		"system + rule + labels2": mergeLabels(mergeLabels(labels2, baseRule.Labels), systemLabels),
+		"system + rule + labels3": mergeLabels(mergeLabels(labels3, baseRule.Labels), systemLabels),
+		"system + rule + no-data": mergeLabels(mergeLabels(noDataLabels, baseRule.Labels), systemLabels),
 	}
 
 	resultFingerprints := map[string]data.Fingerprint{
-		"system + rule":                    data.Labels{}.Fingerprint(),
-		"system + rule + labels1":          labels1.Fingerprint(),
-		"system + rule + labels2":          labels2.Fingerprint(),
-		"system + rule + labels3":          labels3.Fingerprint(),
-		"system + rule + no-data":          noDataLabels.Fingerprint(),
-		"system + rule + datasource-error": data.Labels{}.Fingerprint(),
+		"system + rule":           data.Labels{}.Fingerprint(),
+		"system + rule + labels1": labels1.Fingerprint(),
+		"system + rule + labels2": labels2.Fingerprint(),
+		"system + rule + labels3": labels3.Fingerprint(),
+		"system + rule + no-data": noDataLabels.Fingerprint(),
 	}
 
 	patchState := func(r *ngmodels.AlertRule, s *State) {
@@ -3239,7 +3233,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 								PreviousState: eval.Normal,
 								State: &State{
 									CacheID:            labels["system + rule"].Fingerprint(),
-									Labels:             labels["system + rule + datasource-error"],
+									Labels:             labels["system + rule"],
 									State:              eval.Error,
 									Error:              datasourceError,
 									LatestResult:       newEvaluation(t1, eval.Error),
@@ -3247,9 +3241,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									EndsAt:             t1.Add(ResendDelay * 4),
 									LastEvaluationTime: t1,
 									LastSentAt:         &t1,
-									Annotations: mergeLabels(baseRule.Annotations, data.Labels{
-										"Error": datasourceError.Error(),
-									}),
+									Annotations:        datasourceErrorAnnotations,
 								},
 							},
 						},
@@ -3410,7 +3402,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 								PreviousState: eval.Normal,
 								State: &State{
 									CacheID:            labels["system + rule"].Fingerprint(),
-									Labels:             labels["system + rule + datasource-error"],
+									Labels:             labels["system + rule"],
 									State:              eval.Error,
 									Error:              datasourceError,
 									LatestResult:       newEvaluation(t2, eval.Error),
@@ -3418,9 +3410,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									EndsAt:             t2.Add(ResendDelay * 4),
 									LastEvaluationTime: t2,
 									LastSentAt:         &t2,
-									Annotations: mergeLabels(baseRule.Annotations, data.Labels{
-										"Error": datasourceError.Error(),
-									}),
+									Annotations:        datasourceErrorAnnotations,
 								},
 							},
 						},
@@ -3503,7 +3493,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 								PreviousState: eval.Normal,
 								State: &State{
 									CacheID:            labels["system + rule"].Fingerprint(),
-									Labels:             labels["system + rule + datasource-error"],
+									Labels:             labels["system + rule"],
 									State:              eval.Error,
 									Error:              datasourceError,
 									LatestResult:       newEvaluation(t2, eval.Error),
@@ -3511,9 +3501,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									EndsAt:             t2.Add(ResendDelay * 4),
 									LastEvaluationTime: t2,
 									LastSentAt:         &t2,
-									Annotations: mergeLabels(baseRule.Annotations, data.Labels{
-										"Error": datasourceError.Error(),
-									}),
+									Annotations:        datasourceErrorAnnotations,
 								},
 							},
 						},
@@ -3608,7 +3596,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 								PreviousState: eval.Error,
 								State: &State{
 									CacheID:            labels["system + rule"].Fingerprint(),
-									Labels:             labels["system + rule + datasource-error"],
+									Labels:             labels["system + rule"],
 									Error:              datasourceError,
 									State:              eval.Normal,
 									StateReason:        ngmodels.StateReasonMissingSeries,
@@ -3618,9 +3606,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									LastEvaluationTime: t3,
 									LastSentAt:         &t3,
 									ResolvedAt:         &t3,
-									Annotations: mergeLabels(baseRule.Annotations, data.Labels{
-										"Error": datasourceError.Error(),
-									}),
+									Annotations:        datasourceErrorAnnotations,
 								},
 							},
 						},
@@ -3747,7 +3733,8 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									StartsAt:           t2,
 									EndsAt:             t2,
 									LastEvaluationTime: t2,
-									LastSentAt:         &t1,
+									ResolvedAt:         &t2,
+									LastSentAt:         &t2,
 								},
 							},
 						},
@@ -3761,7 +3748,8 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									StartsAt:           t2,
 									EndsAt:             t2,
 									LastEvaluationTime: t3,
-									LastSentAt:         &t1,
+									ResolvedAt:         &t2,
+									LastSentAt:         &t2,
 								},
 							},
 						},
@@ -3775,7 +3763,8 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									StartsAt:           t2,
 									EndsAt:             t2,
 									LastEvaluationTime: t4,
-									LastSentAt:         &t1,
+									ResolvedAt:         &t2,
+									LastSentAt:         &t2,
 								},
 							},
 						},
@@ -3939,7 +3928,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 								PreviousState: eval.Error,
 								State: &State{
 									CacheID:            labels["system + rule"].Fingerprint(),
-									Labels:             labels["system + rule + datasource-error"],
+									Labels:             labels["system + rule"],
 									Error:              datasourceError,
 									State:              eval.Error,
 									LatestResult:       newEvaluation(t2, eval.Error),
@@ -3947,9 +3936,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									EndsAt:             t2.Add(ResendDelay * 4),
 									LastEvaluationTime: t2,
 									LastSentAt:         &t1,
-									Annotations: mergeLabels(baseRule.Annotations, data.Labels{
-										"Error": datasourceError.Error(),
-									}),
+									Annotations:        datasourceErrorAnnotations,
 								},
 							},
 						},
@@ -3963,7 +3950,8 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									StartsAt:           t3,
 									EndsAt:             t3,
 									LastEvaluationTime: t3,
-									LastSentAt:         &t1,
+									ResolvedAt:         &t3,
+									LastSentAt:         &t3,
 								},
 							},
 						},
@@ -3972,7 +3960,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 								PreviousState: eval.Normal,
 								State: &State{
 									CacheID:            labels["system + rule"].Fingerprint(),
-									Labels:             labels["system + rule + datasource-error"],
+									Labels:             labels["system + rule"],
 									State:              eval.Error,
 									LatestResult:       newEvaluation(t4, eval.Error),
 									Error:              datasourceError,
@@ -3980,9 +3968,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									EndsAt:             t4.Add(ResendDelay * 4),
 									LastEvaluationTime: t4,
 									LastSentAt:         &t4,
-									Annotations: mergeLabels(baseRule.Annotations, data.Labels{
-										"Error": datasourceError.Error(),
-									}),
+									Annotations:        datasourceErrorAnnotations,
 								},
 							},
 						},
@@ -4155,7 +4141,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 								PreviousState: eval.Normal,
 								State: &State{
 									CacheID:            labels["system + rule"].Fingerprint(),
-									Labels:             labels["system + rule + datasource-error"],
+									Labels:             labels["system + rule"],
 									State:              eval.Error,
 									Error:              datasourceError,
 									LatestResult:       newEvaluation(t2, eval.Error),
@@ -4163,9 +4149,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									EndsAt:             t2.Add(ResendDelay * 4),
 									LastEvaluationTime: t2,
 									LastSentAt:         &t2,
-									Annotations: mergeLabels(baseRule.Annotations, data.Labels{
-										"Error": datasourceError.Error(),
-									}),
+									Annotations:        datasourceErrorAnnotations,
 								},
 							},
 						},
@@ -4257,7 +4241,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 								PreviousState: eval.Pending,
 								State: &State{
 									CacheID:            labels["system + rule"].Fingerprint(),
-									Labels:             labels["system + rule + datasource-error"],
+									Labels:             labels["system + rule"],
 									State:              eval.Error,
 									Error:              datasourceError,
 									LatestResult:       newEvaluation(t2, eval.Error),
@@ -4265,9 +4249,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									EndsAt:             t2.Add(ResendDelay * 4),
 									LastEvaluationTime: t2,
 									LastSentAt:         &t2,
-									Annotations: mergeLabels(baseRule.Annotations, data.Labels{
-										"Error": datasourceError.Error(),
-									}),
+									Annotations:        datasourceErrorAnnotations,
 								},
 							},
 						},
@@ -4351,7 +4333,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 								PreviousState: eval.Pending,
 								State: &State{
 									CacheID:            labels["system + rule"].Fingerprint(),
-									Labels:             labels["system + rule + datasource-error"],
+									Labels:             labels["system + rule"],
 									State:              eval.Error,
 									Error:              datasourceError,
 									LatestResult:       newEvaluation(t2, eval.Error),
@@ -4359,9 +4341,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									EndsAt:             t2.Add(ResendDelay * 4),
 									LastEvaluationTime: t2,
 									LastSentAt:         &t2,
-									Annotations: mergeLabels(baseRule.Annotations, data.Labels{
-										"Error": datasourceError.Error(),
-									}),
+									Annotations:        datasourceErrorAnnotations,
 								},
 							},
 						},
@@ -4499,10 +4479,11 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									Labels:             labels["system + rule"],
 									State:              eval.Normal,
 									LatestResult:       newEvaluation(t2, eval.Normal),
+									ResolvedAt:         &t2,
 									StartsAt:           t2,
 									EndsAt:             t2,
 									LastEvaluationTime: t2,
-									LastSentAt:         &t1, // TODO: Fix me. This should be t2 since we should be resolving the previous DatasourceError alert.
+									LastSentAt:         &t2,
 								},
 							},
 						},
@@ -4578,7 +4559,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 								PreviousState: eval.Normal,
 								State: &State{
 									CacheID:            labels["system + rule"].Fingerprint(),
-									Labels:             labels["system + rule + datasource-error"],
+									Labels:             labels["system + rule"],
 									State:              eval.Error,
 									Error:              datasourceError,
 									LatestResult:       newEvaluation(t1, eval.Error),
@@ -4586,9 +4567,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 									EndsAt:             t1.Add(ResendDelay * 4),
 									LastEvaluationTime: t1,
 									LastSentAt:         &t1,
-									Annotations: mergeLabels(baseRule.Annotations, data.Labels{
-										"Error": datasourceError.Error(),
-									}),
+									Annotations:        datasourceErrorAnnotations,
 								},
 							},
 						},
@@ -4597,7 +4576,7 @@ func TestProcessEvalResults_StateTransitions(t *testing.T) {
 								PreviousState: eval.Error,
 								State: &State{
 									CacheID:            labels["system + rule"].Fingerprint(),
-									Labels:             labels["system + rule + datasource-error"],
+									Labels:             labels["system + rule"],
 									State:              eval.Error,
 									Error:              genericError,
 									LatestResult:       newEvaluation(t2, eval.Error),

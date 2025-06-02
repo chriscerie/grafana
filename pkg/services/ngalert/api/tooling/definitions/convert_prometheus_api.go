@@ -1,6 +1,7 @@
 package definitions
 
 import (
+	"github.com/grafana/alerting/definition"
 	"github.com/prometheus/common/model"
 )
 
@@ -200,6 +201,21 @@ import (
 //       202: ConvertPrometheusResponse
 //       403: ForbiddenError
 
+// Route for `mimirtool alertmanager load`
+// swagger:route POST /convert/api/v1/alerts convert_prometheus RouteConvertPrometheusPostAlertmanagerConfig
+//
+// Load Alertmanager configuration to Grafana and merge it with the existing configuration.
+//
+//     Produces:
+//     - application/json
+//
+//     Responses:
+//       202: ConvertPrometheusResponse
+//       403: ForbiddenError
+//
+//     Extensions:
+//       x-raw-request: true
+
 // swagger:parameters RouteConvertPrometheusPostRuleGroup RouteConvertPrometheusCortexPostRuleGroup
 type RouteConvertPrometheusPostRuleGroupParams struct {
 	// in: path
@@ -267,3 +283,16 @@ type ConvertPrometheusResponse struct {
 	ErrorType string `json:"errorType"`
 	Error     string `json:"error"`
 }
+
+// swagger:parameters RouteConvertPrometheusPostAlertmanagerConfig
+type RouteConvertPrometheusPostAlertmanagerConfigParams struct {
+	// in:body
+	Body AlertmanagerUserConfig
+}
+
+// swagger:model
+type AlertmanagerUserConfig struct {
+	AlertmanagerConfig AlertmanagerConfig `yaml:"alertmanager_config" json:"alertmanager_config"`
+}
+
+type AlertmanagerConfig = definition.PostableApiAlertingConfig

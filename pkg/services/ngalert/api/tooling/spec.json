@@ -1360,6 +1360,42 @@
         }
       }
     },
+    "/convert/api/v1/alerts": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "convert_prometheus"
+        ],
+        "summary": "Load Alertmanager configuration to Grafana and merge it with the existing configuration.",
+        "operationId": "RouteConvertPrometheusPostAlertmanagerConfig",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/AlertmanagerUserConfig"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "ConvertPrometheusResponse",
+            "schema": {
+              "$ref": "#/definitions/ConvertPrometheusResponse"
+            }
+          },
+          "403": {
+            "description": "ForbiddenError",
+            "schema": {
+              "$ref": "#/definitions/ForbiddenError"
+            }
+          }
+        },
+        "x-raw-request": "true"
+      }
+    },
     "/convert/prometheus/config/v1/rules": {
       "get": {
         "produces": [
@@ -4744,6 +4780,14 @@
         "numExternalAlertmanagers": {
           "type": "integer",
           "format": "int64"
+        }
+      }
+    },
+    "AlertmanagerUserConfig": {
+      "type": "object",
+      "properties": {
+        "alertmanager_config": {
+          "$ref": "#/definitions/PostableApiAlertingConfig"
         }
       }
     },

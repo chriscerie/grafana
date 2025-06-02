@@ -3057,6 +3057,14 @@
         },
         "type": "object"
       },
+      "AlertmanagerUserConfig": {
+        "properties": {
+          "alertmanager_config": {
+            "$ref": "#/components/schemas/PostableApiAlertingConfig"
+          }
+        },
+        "type": "object"
+      },
       "Annotation": {
         "properties": {
           "alertId": {

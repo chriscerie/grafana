@@ -576,6 +576,14 @@
    },
    "type": "object"
   },
+  "AlertmanagerUserConfig": {
+   "properties": {
+    "alertmanager_config": {
+     "$ref": "#/definitions/PostableApiAlertingConfig"
+    }
+   },
+   "type": "object"
+  },
   "ApiRuleNode": {
    "properties": {
     "alert": {

@@ -13081,6 +13081,14 @@
         }
       }
     },
+    "AlertmanagerUserConfig": {
+      "type": "object",
+      "properties": {
+        "alertmanager_config": {
+          "$ref": "#/definitions/PostableApiAlertingConfig"
+        }
+      }
+    },
     "Annotation": {
       "type": "object",
       "properties": {

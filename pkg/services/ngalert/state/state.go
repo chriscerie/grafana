@@ -219,10 +219,10 @@ func (a *State) Maintain(interval int64, evaluatedAt time.Time) {
 	a.EndsAt = nextEndsTime(interval, evaluatedAt)
 }
 
-// AddErrorInformation adds annotations to the state to indicate that an error occurred.
+// AddErrorInfoToAnnotations adds annotations to the state to indicate that an error occurred.
 // If addDatasourceInfoToLabels is true, the ref_id and datasource_uid are added to the labels,
 // otherwise, they are added to the annotations.
-func (a *State) AddErrorInformation(err error, rule *models.AlertRule) {
+func (a *State) AddErrorInfoToAnnotations(err error, rule *models.AlertRule) {
 	if err == nil {
 		return
 	}
@@ -457,12 +457,12 @@ func resultError(state *State, rule *models.AlertRule, result eval.Result, logge
 		resultAlerting(state, rule, result, logger, models.StateReasonError)
 		// This is a special case where Alerting and Pending should also have an error and reason
 		state.Error = result.Error
-		state.AddErrorInformation(result.Error, rule)
+		state.AddErrorInfoToAnnotations(result.Error, rule)
 	case models.ErrorErrState:
 		if state.State == eval.Error {
 			prevEndsAt := state.EndsAt
 			state.Error = result.Error
-			state.AddErrorInformation(result.Error, rule)
+			state.AddErrorInfoToAnnotations(result.Error, rule)
 			state.Maintain(rule.IntervalSeconds, result.EvaluatedAt)
 			logger.Debug("Keeping state",
 				"state",
@@ -484,20 +484,20 @@ func resultError(state *State, rule *models.AlertRule, result eval.Result, logge
 				"next_ends_at",
 				nextEndsAt)
 			state.SetError(result.Error, result.EvaluatedAt, nextEndsAt)
-			state.AddErrorInformation(result.Error, rule)
+			state.AddErrorInfoToAnnotations(result.Error, rule)
 		}
 	case models.OkErrState:
 		logger.Debug("Execution error state is Normal", "handler", "resultNormal", "previous_handler", handlerStr)
 		resultNormal(state, rule, result, logger, "") // TODO: Should we add a reason?
-		state.AddErrorInformation(result.Error, rule)
+		state.AddErrorInfoToAnnotations(result.Error, rule)
 	case models.KeepLastErrState:
 		logger := logger.New("previous_handler", handlerStr)
 		resultKeepLast(state, rule, result, logger)
-		state.AddErrorInformation(result.Error, rule)
+		state.AddErrorInfoToAnnotations(result.Error, rule)
 	default:
 		err := fmt.Errorf("unsupported execution error state: %s", rule.ExecErrState)
 		state.SetError(err, state.StartsAt, nextEndsTime(rule.IntervalSeconds, result.EvaluatedAt))
-		state.AddErrorInformation(result.Error, rule)
+		state.AddErrorInfoToAnnotations(result.Error, rule)
 	}
 }
 
